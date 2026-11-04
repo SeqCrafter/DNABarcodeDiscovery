@@ -1,0 +1,13 @@
+[project]
+name = "barcode-discovery"
+version = "0.1.0"
+description = "DNA barcode discovery: sliding-window Pi + sequence-cluster ratio"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26", "plotly>=5.20"]
+
+[project.scripts]
+barcode-discovery = "barcode_discovery.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.9"]
+build-backend = "uv_build"
