@@ -6,7 +6,7 @@ import csv
 
 import numpy as np
 
-from . import clustering, diversity, ranking, sliding_window
+from . import annotation, clustering, diversity, ranking, sliding_window
 from .config import CandidateSpec, Config
 from .fasta import Alignment, find_sequence, read_alignment
 
@@ -34,7 +34,7 @@ def _ref_range(cum: np.ndarray, a: int, b: int) -> tuple[int, int] | None:
 
 
 def _build(spec: CandidateSpec, windows, aln: Alignment, valid, diff, ref_cum,
-           ratio_threshold: float) -> ranking.Candidate:
+           ratio_threshold: float, genes) -> ranking.Candidate:
     by_start = {w.start: w for w in windows}
     cols: list[tuple[int, int]] = []
     sel = set()
@@ -57,6 +57,13 @@ def _build(spec: CandidateSpec, windows, aln: Alignment, valid, diff, ref_cum,
 
     ref_ranges = [_ref_range(ref_cum, a, b) for a, b in merged]
     length = sum(r[1] - r[0] + 1 for r in ref_ranges if r)
+    note = ""
+    if genes is not None:
+        note = ";".join(
+            "NA" if r is None else
+            annotation.format_segments(annotation.annotate(genes, r[0], r[1]))
+            for r in ref_ranges
+        )
     k, n, ratio = clustering.cluster_ratio(clustering.extract_ranges(aln, merged))
     return ranking.Candidate(
         name=spec.name, aln_ranges=merged, ref_ranges=ref_ranges,
@@ -64,7 +71,7 @@ def _build(spec: CandidateSpec, windows, aln: Alignment, valid, diff, ref_cum,
         valid_sites=n_valid, pi=pi,
         mean_window_pi=float(np.mean(wpis)) if wpis else float("nan"),
         n_clusters=k, n_seqs=n, cluster_ratio=ratio,
-        passed=ratio > ratio_threshold,
+        passed=ratio > ratio_threshold, annotation=note,
     )
 
 
@@ -75,11 +82,21 @@ def run(cfg: Config) -> list[ranking.Candidate]:
     ref_seq = aln.seqs[ref_idx]
     ref_cum = np.concatenate(([0], np.cumsum([c != "-" for c in ref_seq])))
 
+    genes = None
+    if cfg.gff3:
+        genes = annotation.load_genes(cfg.gff3, cfg.gff3_seqid)
+        ref_len = int(ref_cum[-1])
+        too_far = max(g.end for g in genes)
+        if too_far > ref_len:
+            raise ValueError(
+                f"GFF3 gene ends at {too_far} but '{cfg.reference_id}' has only {ref_len} bases: "
+                "the GFF3 does not match the reference sequence")
+
     windows = sliding_window.read_tsv(cfg.window_pi)
     valid, diff = diversity.site_profile(diversity.encode(aln))
 
     cands = ranking.rank([
-        _build(s, windows, aln, valid, diff, ref_cum, cfg.ratio_threshold)
+        _build(s, windows, aln, valid, diff, ref_cum, cfg.ratio_threshold, genes)
         for s in cfg.candidates
     ])
 
@@ -88,13 +105,14 @@ def run(cfg: Config) -> list[ranking.Candidate]:
         w.writerow(["rank", "name", "aln_region", f"{cfg.reference_id}_region",
                     "pi", "mean_window_pi", "cluster_ratio_pct", "n_clusters",
                     "n_seqs", "n_intervals", "n_windows", "length_bp",
-                    "valid_sites", "pass"])
+                    "valid_sites", "pass"] + (["annotation"] if genes is not None else []))
         for c in cands:
             w.writerow([c.rank, c.name, _fmt(c.aln_ranges), _fmt(c.ref_ranges),
                         f"{c.pi:.6f}", f"{c.mean_window_pi:.6f}",
                         f"{c.cluster_ratio:.2f}", c.n_clusters, c.n_seqs,
                         c.n_intervals, c.n_windows, c.length, c.valid_sites,
-                        "PASS" if c.passed else "FAIL"])
+                        "PASS" if c.passed else "FAIL"]
+                       + ([c.annotation] if genes is not None else []))
 
     for c in cands:  # aligned (gaps kept) fused region of every sequence
         sub = clustering.extract_ranges(aln, c.aln_ranges)

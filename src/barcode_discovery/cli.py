@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import config, evaluate, scan
+from . import align, config, evaluate, scan
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -11,6 +11,16 @@ def main(argv: list[str] | None = None) -> None:
         description="Pi sliding-window + sequence-cluster-ratio barcode screening.",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
+
+    m = sub.add_parser("align", help="step 0 (optional): MSA with pymafft (Rust MAFFT)")
+    m.add_argument("fasta", help="unaligned multi-FASTA")
+    m.add_argument("-o", "--out", default="aligned.fasta")
+    m.add_argument("--strategy", default="auto",
+                   choices=["auto", "fftns2", "fftnsi", "ginsi", "linsi", "einsi"])
+    m.add_argument("--maxiterate", type=int, default=0)
+    m.add_argument("-t", "--threads", type=int, default=0, help="0 = all cores")
+    m.add_argument("--adjust-direction", action="store_true",
+                   help="detect and reverse-complement sequences on the opposite strand")
 
     s = sub.add_parser("scan", help="step 1: sliding-window Pi -> window_pi.tsv + html plot")
     s.add_argument("fasta", help="MAFFT-aligned multi-FASTA")
@@ -32,7 +42,10 @@ def main(argv: list[str] | None = None) -> None:
 
     a = p.parse_args(argv)
     try:
-        if a.cmd == "scan":
+        if a.cmd == "align":
+            align.run(a.fasta, a.out, a.strategy, a.maxiterate, a.threads,
+                      a.adjust_direction)
+        elif a.cmd == "scan":
             scan.run(a.fasta, a.out, a.window, a.step, a.pi_threshold,
                      a.gap_mode == "excluded")
         elif a.cmd == "init-config":

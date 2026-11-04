@@ -20,6 +20,7 @@ class Candidate:
     n_seqs: int
     cluster_ratio: float                         # percent
     passed: bool
+    annotation: str = ""                         # empty when no GFF3 given
     rank: int = field(default=0)
 
 

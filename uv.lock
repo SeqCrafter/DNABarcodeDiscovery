@@ -14,12 +14,14 @@ dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "plotly" },
+    { name = "pymafft" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "numpy", specifier = ">=1.26" },
     { name = "plotly", specifier = ">=5.20" },
+    { name = "pymafft", specifier = ">=0.2.0" },
 ]
 
 [[package]]
@@ -209,4 +211,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/49/c3/72b369f5ed7701b04ab0ea3dcf83e9bbce71c0b3bc6f07f87568550d09ea/plotly-7.1.0.tar.gz", hash = "sha256:f860166a4a3d78c69cb1f4a15f28a5c8283eade98a282a698f3bb853a449ace5", size = 6689315, upload-time = "2026-09-15T19:21:21.75Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/7d/905a3a3d51087515719058c94cfbda2ff0fc14417c20d557ae3e82d8b250/plotly-7.1.0-py3-none-any.whl", hash = "sha256:dbb7fa18afce40d0a8e80d1bf162eceb3faa0ce5a77fe741ad09a74cf78f53f3", size = 9692368, upload-time = "2026-09-15T19:21:18.331Z" },
+]
+
+[[package]]
+name = "pymafft"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/82/bd0ca4bad71bdbb6c1951f2955cd9070cc1dd2d729f263568691d872ae6f/pymafft-0.2.0.tar.gz", hash = "sha256:168baa01d0288a0aec7d0e3d9e1409acf0cb8ec0814d7be13118cb5f510eccc6", size = 876260, upload-time = "2026-09-06T17:41:08.61Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/db/9d8e2db8ce6972be5679c98e6b0b09c1391849e1b8111704ee1741464f0c/pymafft-0.2.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:0f54dd091a50dcd371c7688d824590673d97eedf0baef5ef4f9310a9b9fc38d3", size = 1907172, upload-time = "2026-09-06T17:40:38.752Z" },
+    { url = "https://files.pythonhosted.org/packages/85/58/5513fb2b495738ee84da1a71595a04fd6daef9af7b59c0867465f2607638/pymafft-0.2.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d42aa45bed99f9428b31fabc2a8db068d64b9ba3c00628443f6211e1987f87e3", size = 1802702, upload-time = "2026-09-06T17:40:40.437Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/f0/6bfee5d28fdd682eb6ea138699909291b3c2f6f6a5e79d1d4885096f1aa5/pymafft-0.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5ae718b5dcea973384e2a66cc2dba70ec4e1b9f1f5aba5471df3df4375e4dc56", size = 2011297, upload-time = "2026-09-06T17:40:41.9Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/a0/32631c7c77dce021cab0603ab6457e7841dc5dba78fc223266b64ff65d41/pymafft-0.2.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:522f176817a37ae1730eb57e06f21e4c8323e667362f691ff6e547119ec46f64", size = 1901374, upload-time = "2026-09-06T17:40:43.424Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/04/526ac02cfae9a1434f292a6ebe42e797a8adef658adeef8df31bffe93791/pymafft-0.2.0-cp311-cp311-win_amd64.whl", hash = "sha256:594d3fafd967506b14a07a3c31881633648556b08733a7366319af9158abc157", size = 1873432, upload-time = "2026-09-06T17:40:44.934Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/35/dc66c50f31c289edd221b67cbd72fd1851348aa3fcb17eb5e6d4020128df/pymafft-0.2.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:7ed391e0398722d7d1ec3dd49c2431cd0b21a221158918efa7f54c7b0c8de8fa", size = 1906397, upload-time = "2026-09-06T17:40:46.645Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/62/7ad9c3ce6807a2a665d34c5119e29081dd397af47da198519aa925ebcdb3/pymafft-0.2.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:758394f41e6f5fcba045148bb92c23dd13b77b613a9985793562a7072d7c5846", size = 1802453, upload-time = "2026-09-06T17:40:48.171Z" },
+    { url = "https://files.pythonhosted.org/packages/52/0c/70d2efa496a554fc0c263c68c9d44d570b586f1c627966b4dc7484e3ae2a/pymafft-0.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8005989d4fef2d0aaea31473dd91cc0788d026de2e6314cc3c8d2bb387a0f727", size = 2010543, upload-time = "2026-09-06T17:40:49.714Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/b7/7780d12a4e558aa9b2c3a381cc620a163820dc36a882c588ff5ad04561ef/pymafft-0.2.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3eb84dcde132603c693930a97a88dd5a6b7b0cb25c27bf1ea348367fa8f24100", size = 1899488, upload-time = "2026-09-06T17:40:51.126Z" },
+    { url = "https://files.pythonhosted.org/packages/53/c3/45fc9c748a7615bcb9a54cf9841e3331df8819e3faf94056fd69693360c2/pymafft-0.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:36beb5c2bb9bf3b487653bbba1d5bd0c828329c7fa2955513f2e785639e213cf", size = 1874801, upload-time = "2026-09-06T17:40:52.61Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/82/d77f9ca77b087b46f581cbbc11aa39ade67fdf807de3b93cec4bb8c0cec0/pymafft-0.2.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:149207753ed944c132c26a5bb57d7f8289c7802592cfdf9fc4f73667ebbfca8e", size = 1906394, upload-time = "2026-09-06T17:40:53.932Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/55/213ba4bc3c9b07ba07f6668d5187cded1fcf3be27bb708ecb66baa7298ee/pymafft-0.2.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:b7d828baf309783ac5a8527de36418484f20aac7c12c3821f237b5e3889a5a64", size = 1802450, upload-time = "2026-09-06T17:40:55.321Z" },
+    { url = "https://files.pythonhosted.org/packages/35/74/78335bfcadcb9921c02966ac81396fa3c34fe23698c87cebeb699af6ef36/pymafft-0.2.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8a7b2e34ea0d4c4b5040cae5c4e76c6500d8b07ab38aebbd52e479dd943cba47", size = 2010374, upload-time = "2026-09-06T17:40:56.814Z" },
+    { url = "https://files.pythonhosted.org/packages/20/50/9e3ed4faca07c2b01c256bbf60fc37ac9cdcabec1ac166587fc4595fc813/pymafft-0.2.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:17e5e87191062439d5412664d7fa62013c4f37b54f5771a81d9e7a2a90969f4a", size = 1899244, upload-time = "2026-09-06T17:40:58.261Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/79/d106ef603af6d089ef1bc8af97fd1e2dce67c24c488121d93a385ba666a1/pymafft-0.2.0-cp313-cp313-win_amd64.whl", hash = "sha256:666996aa56adac53cc482fe57508d74276dfd1cecd95d907ea9967d73fb484de", size = 1874620, upload-time = "2026-09-06T17:41:00.01Z" },
 ]

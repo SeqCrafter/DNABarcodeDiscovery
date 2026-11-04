@@ -19,6 +19,13 @@ window_pi = "results/window_pi.tsv"
 # 用于注释真实坐标的物种 ID (与 FASTA 头 '>' 后的 ID 完全一致, 或其第一个空白前的部分)
 reference_id = ""
 
+# (可选) 参考基因组的 GFF3 注释; 必须与 reference_id 对应同一个基因组。
+# 填写后 evaluate 会把每个区间注释为 geneA(10bp)+geneA-geneB(180bp)+geneB(20bp)。
+# 不需要注释时留空。
+gff3 = ""
+# (可选) GFF3 含多条序列时, 指定与参考基因组对应的 seqid
+gff3_seqid = ""
+
 # 输出目录
 out = "results"
 
@@ -59,6 +66,8 @@ class Config:
     reference_id: str
     out: Path
     ratio_threshold: float
+    gff3: Path | None
+    gff3_seqid: str | None
     candidates: list[CandidateSpec]
 
 
@@ -111,5 +120,7 @@ def load(path: str | Path) -> Config:
         reference_id=need("reference_id"),
         out=resolve(raw.get("out", "results")),
         ratio_threshold=float(raw.get("ratio_threshold", 80.0)),
+        gff3=resolve(raw["gff3"]) if raw.get("gff3") else None,
+        gff3_seqid=raw.get("gff3_seqid") or None,
         candidates=specs,
     )
