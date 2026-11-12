@@ -1,3 +1,6 @@
 dnasp.py
 method.md
 .venv/
+data/
+results/
+config.toml

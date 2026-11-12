@@ -33,6 +33,10 @@ def main(argv: list[str] | None = None) -> None:
                    help="DnaSP 'Gaps in Sliding Window': excluded = window/step counted "
                         "in valid sites (default), considered = in alignment columns")
 
+    s.add_argument("--gff3", help="GFF3 of the reference genome: draw a gene track under the plot")
+    s.add_argument("--reference-id", help="FASTA ID of the genome the GFF3 describes (needed with --gff3)")
+    s.add_argument("--gff3-seqid", help="GFF3 seqid to use if the file has several")
+
     i = sub.add_parser("init-config", help="write an empty step-2 config template")
     i.add_argument("-o", "--out", default="config.toml")
     i.add_argument("--force", action="store_true", help="overwrite existing file")
@@ -47,7 +51,8 @@ def main(argv: list[str] | None = None) -> None:
                       a.adjust_direction)
         elif a.cmd == "scan":
             scan.run(a.fasta, a.out, a.window, a.step, a.pi_threshold,
-                     a.gap_mode == "excluded")
+                     a.gap_mode == "excluded",
+                     a.gff3, a.reference_id, a.gff3_seqid)
         elif a.cmd == "init-config":
             config.write_template(a.out, a.force)
             print(f"Template written to {a.out}")

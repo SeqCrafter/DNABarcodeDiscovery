@@ -27,6 +27,7 @@ class Gene:
     name: str
     start: int  # 1-based inclusive
     end: int
+    strand: str = "+"
 
 
 @dataclass(frozen=True)
@@ -69,7 +70,7 @@ def load_genes(path: str | Path, seqid: str | None = None) -> list[Gene]:
             if not name:
                 raise ValueError(f"{path}: gene at {cols[0]}:{cols[3]}-{cols[4]} has no Name")
             s, e = sorted((int(cols[3]), int(cols[4])))
-            genes.append(Gene(name, s, e))
+            genes.append(Gene(name, s, e, cols[6] if cols[6] in ('+', '-') else '+'))
             seqids.add(cols[0])
     if len(seqids) > 1:
         raise ValueError(
@@ -114,3 +115,15 @@ def annotate(genes: list[Gene], start: int, end: int) -> list[Segment]:
 
 def format_segments(segs: list[Segment]) -> str:
     return "+".join(f"{s.label}({s.length}bp)" for s in segs)
+
+
+def to_alignment_columns(genes: list[Gene], ref_seq: str) -> list[Gene]:
+    """Map genes from reference (gap-free) coordinates to 1-based alignment
+    columns, using the gap pattern of the reference's aligned sequence."""
+    cols = [i + 1 for i, c in enumerate(ref_seq) if c != "-"]
+    far = max(g.end for g in genes)
+    if far > len(cols):
+        raise ValueError(
+            f"GFF3 gene ends at {far} but the reference has only {len(cols)} bases: "
+            "the GFF3 does not match the reference sequence")
+    return [Gene(g.name, cols[g.start - 1], cols[g.end - 1], g.strand) for g in genes]

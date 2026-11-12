@@ -21,7 +21,13 @@ uv run barcode-discovery align raw.fasta -o aligned.fasta --strategy auto -t 10
 ```bash
 # 第一步：计算窗口 Pi，生成 window_pi.tsv 和可交互 HTML 点图
 uv run barcode-discovery scan aligned.fasta -o results --pi-threshold 0.05
+
+# 可选：在点图下方同步显示基因注释轨道（箭头表示链方向，随缩放联动）
+uv run barcode-discovery scan aligned.fasta -o results \
+    --gff3 ref.gff3 --reference-id NC_000000
 ```
+
+`--gff3` 的坐标属于参考物种，程序会按 `--reference-id` 序列的 Gap 位置，把基因坐标映射为比对后的列坐标；只使用 `type=gene`，名称取 `Name`。
 
 第三步生成配置文件模板
 
