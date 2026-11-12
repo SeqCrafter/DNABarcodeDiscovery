@@ -1,82 +1,85 @@
 # DNABarcodeDiscovery
 
-通过组合 Pi 和 sequence clusters的方法实现药用植物鉴别 DNA 条形码方法。
+A method for discovering DNA barcodes for identifying medicinal plants by combining Pi (nucleotide diversity) and sequence clusters.
 
 
-### 依赖
-本项目依赖numpy, plotly 和 pymafft包。pymafft包基于Rust重新编写了 MAFFT 算法，因此需要提前安装 Rust 工具链才能完成编译。同时要求你的python版本不低于3.10 且不大于 3.14。
+### Requirements
+This project depends on numpy, plotly and pymafft. pymafft is a Rust rewrite of the MAFFT algorithm, so the Rust toolchain must be installed beforehand to compile it. Python 3.10 or newer, and older than 3.14, is required.
 
-### 使用方法
+### Usage
 
-总共分四步骤
+The workflow has four steps.
 
-第一步首先执行多序列比对
+Step 1: run a multiple sequence alignment.
 
 ```bash
 uv run barcode-discovery align raw.fasta -o aligned.fasta --strategy auto -t 10
 ```
 
-第二步首先计算序列多样性，会生成一个交互式点图，辅助选择最优区间用于合并：
+Step 2: compute sequence diversity. This produces an interactive dot plot that helps you choose the best intervals to fuse:
 
 ```bash
-# 第一步：计算窗口 Pi，生成 window_pi.tsv 和可交互 HTML 点图
+# Compute sliding-window Pi; writes window_pi.tsv and an interactive HTML dot plot
 uv run barcode-discovery scan aligned.fasta -o results --pi-threshold 0.05
 
-# 可选：在点图下方同步显示基因注释轨道（箭头表示链方向，随缩放联动）
+# Optional: show a synchronized gene annotation track below the plot
+# (arrows indicate strand direction; the track zooms together with the plot)
 uv run barcode-discovery scan aligned.fasta -o results \
     --gff3 ref.gff3 --reference-id NC_000000
 ```
 
-`--gff3` 的坐标属于参考物种，程序会按 `--reference-id` 序列的 Gap 位置，把基因坐标映射为比对后的列坐标；只使用 `type=gene`，名称取 `Name`。
+The coordinates in `--gff3` belong to the reference species. Using the gap pattern of the `--reference-id` sequence in the alignment, the program maps gene coordinates to alignment columns. Only features with `type=gene` are used, and the gene name is taken from `Name`.
 
-第三步生成配置文件模板
+Step 3: generate a config file template.
 
 ```bash
-# 生成配置模板
+# Generate the config template
 uv run barcode-discovery init-config -o config.toml
 ```
 
-第四步填好 config.toml， 主要将需要的区间发送给下一步脚本。
+Step 4: fill in `config.toml`, mainly the intervals you selected, and pass it to the evaluation step.
 
 ```bash
-# 在点图上悬停读取窗口起点，填好 config.toml 后运行第二步
+# Hover over the plot to read window start positions, fill in config.toml, then run:
 uv run barcode-discovery evaluate config.toml
 ```
 
-### 配置文件格式
+### Config file format
 
 ```toml
-# barcode-discovery 第二步配置文件
-# 运行: barcode-discovery evaluate config.toml
+# barcode-discovery evaluate config
+# Run: barcode-discovery evaluate config.toml
 
-# 第一步使用的 MAFFT 比对 FASTA
+# MAFFT-aligned FASTA used in the scan step
 fasta = "data/salvia_cp_26spe_align.fas"
 
-# 第一步输出的窗口 Pi 表
+# Window Pi table written by the scan step
 window_pi = "results/window_pi.tsv"
 
-# 用于注释真实坐标的物种 ID (与 FASTA 头 '>' 后的 ID 完全一致, 或其第一个空白前的部分)
+# Species ID used to report real coordinates (must match the FASTA header ID after '>',
+# or the part of the header before the first whitespace)
 reference_id = "NC_020431.1"
 
-# (可选) 参考基因组的 GFF3 注释; 必须与 reference_id 对应同一个基因组。
-# 填写后 evaluate 会把每个区间注释为 geneA(10bp)+geneA-geneB(180bp)+geneB(20bp)。
-# 不需要注释时留空。
+# (Optional) GFF3 annotation of the reference genome; it must describe the same genome as reference_id.
+# When set, evaluate annotates each interval as geneA(10bp)+geneA-geneB(180bp)+geneB(20bp).
+# Leave empty if no annotation is needed.
 gff3 = "data/S.miltiorrhiza_chloroplast.gff3"
-# (可选) GFF3 含多条序列时, 指定与参考基因组对应的 seqid
+# (Optional) seqid in the GFF3 that corresponds to the reference genome, if the file has several sequences
 gff3_seqid = ""
 
-# 输出目录
+# Output directory
 out = "results"
 
-# 序列聚类比阈值 (%), 大于该值判定为 PASS
+# Sequence cluster ratio threshold (%); a candidate above this value is marked PASS
 ratio_threshold = 80.0
 
-# ---- 候选条形码 ----
-# 每个 [[candidate]] 是一个候选条形码, 可以写任意多个。
-# intervals: 一个或多个区间, 每个区间 = [起始窗口的起点坐标, 结束窗口的起点坐标]
-#   起点坐标取自 window_pi.tsv 的 start 列 (或交互图悬停显示的 window start)。
-#   区间内的窗口会被融合为 [起始窗口 start, 结束窗口 end]。
-#   多个区间会拼接为同一个条形码 (重叠/相邻的区间自动合并)。
+# ---- Candidate barcodes ----
+# Each [[candidate]] is one candidate barcode; write as many as you need.
+# intervals: one or more intervals, each = [start of the first window, start of the last window]
+#   Take the start coordinates from the "start" column of window_pi.tsv (or the "window start"
+#   shown when hovering over the interactive plot).
+#   The windows within an interval are fused into [start of first window, end of last window].
+#   Multiple intervals are concatenated into a single barcode (overlapping or adjacent intervals are merged automatically).
 [[candidate]]
 name = "candidate_1"
 intervals = [
@@ -91,8 +94,8 @@ intervals = [
 
 ```
 
-### 结果文件
+### Output files
 
-- `window_pi.tsv` : 窗口 Pi 值表
-- `pi_sliding_window.html` : 窗口 Pi 值交互图
-- `barcode_candidates.tsv` : 候选条形码表
+- `window_pi.tsv`: table of sliding-window Pi values
+- `pi_sliding_window.html`: interactive plot of sliding-window Pi values
+- `barcode_candidates.tsv`: table of candidate barcodes

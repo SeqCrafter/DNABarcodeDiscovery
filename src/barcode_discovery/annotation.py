@@ -28,6 +28,7 @@ class Gene:
     start: int  # 1-based inclusive
     end: int
     strand: str = "+"
+    exons: tuple[tuple[int, int], ...] = ()  # sub-intervals (exon, else CDS)
 
 
 @dataclass(frozen=True)
@@ -53,7 +54,10 @@ def _attrs(field: str) -> dict[str, str]:
 def load_genes(path: str | Path, seqid: str | None = None) -> list[Gene]:
     """Read ``gene`` features from a GFF3 file (single sequence)."""
     genes: list[Gene] = []
+    gene_ids: list[str | None] = []
     seqids: set[str] = set()
+    parent_of: dict[str, str] = {}   # feature ID -> Parent (to climb exon -> RNA -> gene)
+    children: list[tuple[str, str, int, int]] = []  # (type, parent, start, end)
     with open(path, encoding="utf-8", errors="replace") as fh:
         for line in fh:
             if line.startswith("##FASTA"):
@@ -61,17 +65,36 @@ def load_genes(path: str | Path, seqid: str | None = None) -> list[Gene]:
             if line.startswith("#") or not line.strip():
                 continue
             cols = line.rstrip("\n").split("\t")
-            if len(cols) < 9 or cols[2] != "gene":
-                continue
-            if seqid is not None and cols[0] != seqid:
+            if len(cols) < 9 or (seqid is not None and cols[0] != seqid):
                 continue
             a = _attrs(cols[8])
+            s, e = sorted((int(cols[3]), int(cols[4])))
+            if cols[2] in ("exon", "CDS") and a.get("Parent"):
+                children.append((cols[2], a["Parent"].split(",")[0], s, e))
+                continue
+            if cols[2] != "gene":
+                if a.get("ID") and a.get("Parent"):
+                    parent_of[a["ID"]] = a["Parent"].split(",")[0]
+                continue
             name = a.get("Name") or a.get("gene") or a.get("ID")
             if not name:
                 raise ValueError(f"{path}: gene at {cols[0]}:{cols[3]}-{cols[4]} has no Name")
-            s, e = sorted((int(cols[3]), int(cols[4])))
-            genes.append(Gene(name, s, e, cols[6] if cols[6] in ('+', '-') else '+'))
+            genes.append(Gene(name, s, e, cols[6] if cols[6] in ("+", "-") else "+"))
+            gene_ids.append(a.get("ID"))
             seqids.add(cols[0])
+    index = {gid: i for i, gid in enumerate(gene_ids) if gid}
+    parts: dict[int, dict[str, set]] = {}
+    for kind, parent, s, e in children:
+        for _ in range(3):  # exon -> RNA -> gene
+            if parent in index or parent not in parent_of:
+                break
+            parent = parent_of[parent]
+        if parent in index:
+            parts.setdefault(index[parent], {"exon": set(), "CDS": set()})[kind].add((s, e))
+    for i, p in parts.items():
+        chosen = p["exon"] or p["CDS"]
+        genes[i] = Gene(genes[i].name, genes[i].start, genes[i].end, genes[i].strand,
+                        tuple(sorted(chosen)))
     if len(seqids) > 1:
         raise ValueError(
             f"{path}: genes on several sequences {sorted(seqids)}; set 'gff3_seqid' in the config"
@@ -126,4 +149,6 @@ def to_alignment_columns(genes: list[Gene], ref_seq: str) -> list[Gene]:
         raise ValueError(
             f"GFF3 gene ends at {far} but the reference has only {len(cols)} bases: "
             "the GFF3 does not match the reference sequence")
-    return [Gene(g.name, cols[g.start - 1], cols[g.end - 1], g.strand) for g in genes]
+    return [Gene(g.name, cols[g.start - 1], cols[g.end - 1], g.strand,
+                 tuple((cols[a - 1], cols[b - 1]) for a, b in g.exons if b <= len(cols)))
+            for g in genes]
